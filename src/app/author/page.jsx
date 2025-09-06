@@ -31,7 +31,7 @@ const majorThemes = [
 ];
 
 const importantDates = [
-  { label: 'Abstract submission:', value: '30th July 2025' },
+  { label: 'Paper submission:', value: '30th July 2025' },
   { label: 'Abstract acceptance:', value: '30th July 2025' },
   { label: 'Full length paper:', value: '30th August 2025' },
   { label: 'Acceptance/Rejection:', value: '25th September 2025' },
@@ -138,7 +138,7 @@ const Page = () => {
                 className="bg-[#ff9800] hover:bg-orange-800 font-bold px-7 py-3 rounded-lg shadow-lg transition text-lg cursor-pointer text-white drop-shadow"
                 onClick={() => window.open('https://cmt3.research.microsoft.com/WETWAR2025', '_blank')}
               >
-                Abstract Submission
+                Paper Submission
               </button>
               {/* Removed Paper Submission button */}
               {/* Template Download Button */}
