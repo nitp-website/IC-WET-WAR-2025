@@ -18,7 +18,7 @@ const About = () => {
       >
         About Us
       </h1>
-      <div className="flex flex-col lg:flex-row gap-10 items-center justify-center w-full max-w-6xl mx-auto">
+      <div className="flex flex-col lg:flex-row gap-10 items-center justify-center mx-auto">
         {/* Left: About Text */}
         <div className="flex-1 min-w-[220px] max-w-xl text-justify z-2">
           <p className="text-base sm:text-lg text-black mb-6 leading-relaxed font-serif text-justify">
@@ -63,12 +63,12 @@ const About = () => {
         </div>
         {/* Right: Single Video */}
         <div className="flex-1 min-w-[220px] max-w-xl flex items-center justify-center">
-          <div className="relative w-full max-w-2xl aspect-[16/10] rounded-2xl overflow-hidden shadow-lg border-2 border-white/30 bg-white/10 flex items-center justify-center" style={{ minHeight: "340px" }}>
+          <div className="relative w-full max-w-2xl aspect-[16/10] rounded-2xl overflow-hidden shadow-lg border-2 border-white/30 bg-white/10 flex items-center justify-center h-auto md:h-[400px]">
             <video
               ref={videoRef}
               src="WETWAR_vid.mp4"
               controls
-              className="w-full h-[340px] object-cover rounded-2xl"
+              className="w-full h-auto md:h-[400px] object-cover rounded-2xl"
             />
           </div>
         </div>

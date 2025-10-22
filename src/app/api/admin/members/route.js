@@ -97,7 +97,7 @@ export async function POST(request) {
     // Generate registration number
     const timestamp = Date.now().toString(36).toUpperCase();
     const randomChars = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const registrationNumber = `WETWAR${timestamp}${randomChars}`;
+    const registrationNumber = `WETWAR-${randomChars}`;
 
     // Insert member using correct column names
     const insertResult = await query(

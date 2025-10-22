@@ -1,6 +1,9 @@
 import nodemailer from 'nodemailer';
 import QRCode from 'qrcode';
 import { v2 as cloudinary } from 'cloudinary';
+import { jsPDF } from 'jspdf';
+import { createCanvas } from 'canvas';
+import JsBarcode from 'jsbarcode';
 
 // Configure Cloudinary
 cloudinary.config({
@@ -102,6 +105,128 @@ async function uploadQRCodeToCloudinary(registrationNumber) {
   }
 }
 
+// Generate ID Card PDF
+async function generateIDCardPDF(memberData) {
+  try {
+    // Create high-resolution canvas for better quality (multiply by 3 for better text rendering)
+    const scale = 3;
+    const width = 340;
+    const height = 560;
+    const canvas = createCanvas(width * scale, height * scale);
+    const ctx = canvas.getContext('2d');
+    
+    // Scale context for high-quality rendering
+    ctx.scale(scale, scale);
+
+    // Fill white background
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, width, height);
+
+    // Top blue wave header
+    ctx.fillStyle = '#00B4D8';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(width, 0);
+    ctx.lineTo(width, 180);
+    ctx.quadraticCurveTo(width/2, 200, 0, 180);
+    ctx.closePath();
+    ctx.fill();
+
+    // WET-WAR 2025 title
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 24px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('WET-WAR 2025', width/2, 30);
+
+    // Conference subtitle
+    ctx.font = '12px Arial';
+    ctx.fillText('International Conference', width/2, 55);
+    ctx.fillText('"Wetlands and water resources for sustainable', width/2, 68);
+    ctx.fillText('development 2025"', width/2, 81);
+
+    // Date
+    ctx.font = 'bold 13px Arial';
+    ctx.fillText('(29 TO 31 December 2025)', width/2, 98);
+
+    // Institute
+    ctx.font = '14px Arial';
+    ctx.fillText('National institute of Technology Patna India', width/2, 113);
+
+    // Member Name
+    ctx.fillStyle = '#000080';
+    ctx.font = 'bold 20px Arial';
+    ctx.fillText(memberData.name.toUpperCase(), width/2, 240);
+
+    // Member's Designation (from form)
+    ctx.fillStyle = '#00008B';
+    ctx.font = '10px Arial';
+    ctx.fillText(memberData.designation || 'PARTICIPANT', width/2, 265);
+
+    // Institute
+    ctx.font = 'bold 13px Arial';
+    ctx.fillText((memberData.institute || 'NOT SPECIFIED').toUpperCase(), width/2, 282);
+
+    // India
+    ctx.fillStyle = '#FF8C00';
+    ctx.font = 'bold 13px Arial';
+    ctx.fillText('INDIA', width/2, 298);
+
+    // ID No
+    ctx.fillStyle = '#000000';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(`ID No  : ${memberData.registration_number}`, 40, 330);
+
+    // Generate barcode at higher resolution
+    const barcodeCanvas = createCanvas(280 * scale, 80 * scale);
+    JsBarcode(barcodeCanvas, memberData.registration_number, {
+      format: 'CODE128',
+      width: 2 * scale,
+      height: 60 * scale,
+      displayValue: false,
+      margin: 5 * scale
+    });
+
+    // Draw barcode on main canvas
+    ctx.drawImage(barcodeCanvas, 30, 345, 280, 70);
+
+    // Bottom blue wave footer
+    ctx.fillStyle = '#0077B6';
+    ctx.beginPath();
+    ctx.moveTo(0, 490);
+    ctx.quadraticCurveTo(width/2, 470, width, 490);
+    ctx.lineTo(width, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    ctx.fill();
+
+    // Footer text - Use member's designation or default role
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    const footerText = (memberData.designation || 'PARTICIPANT').toUpperCase();
+    ctx.fillText(footerText, width/2, 525);
+
+    // Convert canvas to PDF using jsPDF with high quality
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'px',
+      format: [width, height],
+      compress: false
+    });
+
+    // Add canvas as high-quality image to PDF
+    const imgData = canvas.toDataURL('image/png', 1.0);
+    pdf.addImage(imgData, 'PNG', 0, 0, width, height, undefined, 'FAST');
+
+    // Return PDF as buffer
+    return Buffer.from(pdf.output('arraybuffer'));
+  } catch (error) {
+    console.error('Error generating ID card PDF:', error);
+    throw error;
+  }
+}
+
 export async function sendIDCardEmail(memberData) {
   try {
     const transporter = await createTransporter();
@@ -113,10 +238,20 @@ export async function sendIDCardEmail(memberData) {
     // Upload QR code to Cloudinary
     const qrCodeUrl = await uploadQRCodeToCloudinary(memberData.registration_number);
 
+    // Generate ID Card PDF
+    const idCardPDF = await generateIDCardPDF(memberData);
+
     const mailOptions = {
       from: process.env.SMTP_FROM_EMAIL,
       to: memberData.email,
       subject: 'WET-WAR 2025 Conference - Your ID Card',
+      attachments: [
+        {
+          filename: `ID_Card_${memberData.registration_number}.pdf`,
+          content: idCardPDF,
+          contentType: 'application/pdf'
+        }
+      ],
       html: `
         <!DOCTYPE html>
         <html lang="en">

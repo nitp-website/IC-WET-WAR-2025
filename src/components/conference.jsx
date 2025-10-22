@@ -54,7 +54,7 @@ function TemplateDownload() {
 }
 
 const Conference = () => (
-  <section className="relative z-10 min-h-[70vh] flex flex-col bg-gradient-to-br from-[#e3f2fd] to-[#b3e0fc] py-12 px-4 font-sans mb-14">
+  <section className="relative z-10 min-h-[70vh] flex flex-col bg-gradient-to-br from-[#e3f2fd] to-[#b3e0fc] py-12 px-4 font-sans">
     <h2 className="w-full text-3xl sm:text-4xl font-bold text-black mb-10 tracking-wider uppercase text-center z-30 drop-shadow-[0_2px_12px_#38bdf8]">
       About Conference
     </h2>
