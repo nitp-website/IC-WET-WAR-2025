@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Download, Eye, Mail, Phone, Building, User, Edit, Trash2, Loader2, Filter, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import ConfirmationDialog from './ui/ConfirmationDialog';
+import JsBarcode from 'jsbarcode';
 
 export default function MembersManagement() {
   const [members, setMembers] = useState([]);
@@ -231,6 +232,59 @@ export default function MembersManagement() {
     toast.success('Members list refreshed');
   };
 
+  const handleDownloadBarcode = (member) => {
+    try {
+      // Create canvas element
+      const canvas = document.createElement('canvas');
+      
+      // Generate barcode
+      JsBarcode(canvas, member.registration_number, {
+        format: 'CODE128',
+        width: 2,
+        height: 80,
+        displayValue: false,
+        margin: 10
+      });
+      
+      // Create a new canvas with text below
+      const finalCanvas = document.createElement('canvas');
+      const ctx = finalCanvas.getContext('2d');
+      
+      // Set canvas dimensions (barcode width + extra height for text)
+      finalCanvas.width = canvas.width;
+      finalCanvas.height = canvas.height + 40;
+      
+      // Fill white background
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+      
+      // Draw barcode
+      ctx.drawImage(canvas, 0, 0);
+      
+      // Add registration number text below barcode
+      ctx.fillStyle = 'black';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(member.registration_number, finalCanvas.width / 2, canvas.height + 25);
+      
+      // Convert to blob and download
+      finalCanvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `barcode_${member.registration_number}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast.success('Barcode downloaded successfully');
+      });
+    } catch (error) {
+      console.error('Error generating barcode:', error);
+      toast.error('Error generating barcode');
+    }
+  };
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header Section */}
@@ -363,6 +417,13 @@ export default function MembersManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleDownloadBarcode(member)}
+                          className="text-green-600 hover:text-green-900 p-2 rounded-lg hover:bg-green-50 transition-all duration-200"
+                          title="Download barcode"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() => handleEdit(member)}
                           className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50 transition-all duration-200"
